@@ -220,7 +220,7 @@ class env_stack_t : public environment_t
     
     bool try_remove(env_node_t *n, const wcstring &key, int var_mode);
     bool local_scope_exports(env_node_t *n) const;
-    void get_exported(const env_node_t *n, std::map<wcstring, wcstring> &h) const;
+    void get_exported(const env_node_t *n, std::map<wcstring, wcstring> *h) const;
     void mark_changed_exported();
     bool has_changed_exported() const;
     

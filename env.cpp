@@ -994,6 +994,7 @@ int env_stack_t::remove(const wcstring &key, int var_mode)
             !(var_mode & ENV_GLOBAL) &&
             !(var_mode & ENV_LOCAL))
     {
+        bool is_exported = uvars()->get_export(key);
         erased = uvars() && uvars()->remove(key);
         if (erased)
         {
@@ -1007,6 +1008,9 @@ int env_stack_t::remove(const wcstring &key, int var_mode)
                     event_fire(*this->event_handling_parser, &ev);
             }
         }
+        
+        if (is_exported)
+            mark_changed_exported();
     }
 
     locker.unlock();
@@ -1381,7 +1385,7 @@ wcstring_list_t env_stack_t::get_names(env_mode_flags_t flags) const
   Get list of all exported variables
 */
 
-void env_stack_t::get_exported(const env_node_t *n, std::map<wcstring, wcstring> &h) const
+void env_stack_t::get_exported(const env_node_t *n, std::map<wcstring, wcstring> *h) const
 {
     ASSERT_IS_LOCKED(s_env_lock);
     if (!n)
@@ -1397,10 +1401,19 @@ void env_stack_t::get_exported(const env_node_t *n, std::map<wcstring, wcstring>
     {
         const wcstring &key = iter->first;
         const var_entry_t &val_entry = iter->second;
-        if (val_entry.exportv && (val_entry.val != ENV_NULL))
+
+        if (val_entry.exportv && val_entry.val != ENV_NULL)
         {
-            // Don't use std::map::insert here, since we need to overwrite existing values from previous scopes
-            h[key] = val_entry.val;
+            // Export the variable
+            // Don't use std::map::insert here, since we need to overwrite existing
+            // values from previous scopes
+            (*h)[key] = val_entry.val;
+        }
+        else
+        {
+            // We need to erase from the map if we are not exporting,
+            // since a lower scope may have exported. See #2132
+            h->erase(key);
         }
     }
 }
@@ -1469,7 +1482,7 @@ void env_stack_t::update_export_array_if_necessary(bool recalc)
 
         debug(4, L"env_export_arr() recalc");
 
-        get_exported(top.get(), vals);
+        get_exported(top.get(), &vals);
         
         // Read the gen count before reading uvars
         const export_generation_t local_export_gen = s_uvar_export_generation;

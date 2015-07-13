@@ -30,6 +30,8 @@ enum
     R_BACKWARD_CHAR,
     R_FORWARD_WORD,
     R_BACKWARD_WORD,
+    R_FORWARD_BIGWORD,
+    R_BACKWARD_BIGWORD,
     R_HISTORY_SEARCH_BACKWARD,
     R_HISTORY_SEARCH_FORWARD,
     R_DELETE_CHAR,
@@ -44,8 +46,10 @@ enum
     R_BACKWARD_KILL_LINE,
     R_KILL_WHOLE_LINE,
     R_KILL_WORD,
+    R_KILL_BIGWORD,
     R_BACKWARD_KILL_WORD,
     R_BACKWARD_KILL_PATH_COMPONENT,
+    R_BACKWARD_KILL_BIGWORD,
     R_HISTORY_TOKEN_SEARCH_BACKWARD,
     R_HISTORY_TOKEN_SEARCH_FORWARD,
     R_SELF_INSERT,
@@ -112,11 +116,11 @@ void input_destroy();
 wint_t input_readch(bool allow_commands = true);
 
 /**
-   Push a character or a readline function onto the stack of unread
+   Enqueue a character or a readline function to the queue of unread
    characters that input_readch will return before actually reading from fd
    0.
  */
-void input_unreadch(wint_t ch);
+void input_queue_ch(wint_t ch);
 
 
 /**

@@ -179,7 +179,9 @@ static void write_part(const wchar_t *buffer,
             {
                 case TOK_STRING:
                 {
-                    out.append(escape_string(tok_last(&tok), UNESCAPE_INCOMPLETE));
+                    wcstring tmp = tok_last(&tok);
+                    unescape_string_in_place(&tmp, UNESCAPE_INCOMPLETE);
+                    out.append(tmp);
                     out.push_back(L'\n');
                     break;
                 }
@@ -203,10 +205,10 @@ static void write_part(const wchar_t *buffer,
         }
 
 //    debug( 0, L"woot2 %ls -> %ls", buff, esc );
-
-        streams.stdout_stream.append(begin, end - begin);
+        wcstring tmp = wcstring(begin, end - begin);
+        unescape_string_in_place(&tmp, UNESCAPE_INCOMPLETE);
+        streams.stdout_stream.append(tmp);
         streams.stdout_stream.append(L"\n");
-
     }
 }
 
@@ -410,10 +412,10 @@ static int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t 
             {
                 /*
                   input_unreadch inserts the specified keypress or
-                  readline function at the top of the stack of unused
+                  readline function at the back of the queue of unused
                   keypresses
                 */
-                input_unreadch(c);
+                input_queue_ch(c);
             }
             else
             {

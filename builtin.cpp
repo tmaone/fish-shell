@@ -1534,7 +1534,7 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
     {
         int i;
         for (i=w.woptind; i<argc; i++)
-            function_remove_ignore_autoload(argv[i]);
+            function_remove(argv[i]);
         return STATUS_BUILTIN_OK;
     }
     else if (desc)
@@ -1626,7 +1626,7 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
             return STATUS_BUILTIN_ERROR;
         }
 
-        if ((wcsfuncname(new_func.c_str()) != 0) || parser_keywords_is_reserved(new_func))
+        if ((wcsfuncname(new_func) != 0) || parser_keywords_is_reserved(new_func))
         {
             streams.stderr_stream.append_format(
                           _(L"%ls: Illegal function name '%ls'\n"),
@@ -1977,16 +1977,24 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
     int res=STATUS_BUILTIN_OK;
     wchar_t *desc=0;
     std::vector<event_t> events;
-    std::auto_ptr<wcstring_list_t> named_arguments(NULL);
+    
+    bool has_named_arguments = false;
+    wcstring_list_t named_arguments;
     wcstring_list_t inherit_vars;
 
-    wchar_t *name = 0;
     bool shadows = true;
 
     w.woptind=0;
     
     wcstring_list_t wrap_targets;
-
+    
+    /* If -a/--argument-names is specified before the function name,
+       then the function name is the last positional, e.g. `function -a arg1 arg2 name`.
+       If it is specified after the function name (or not specified at all) then the
+       function name is the first positional. This is the common case. */
+    bool name_is_first_positional = true;
+    wcstring_list_t positionals;
+    
     const struct woption long_options[] =
     {
         { L"description", required_argument, 0, 'd' },
@@ -2007,9 +2015,10 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
     {
         int opt_index = 0;
 
+        // The leading - here specifies RETURN_IN_ORDER
         int opt = w.wgetopt_long(argc,
                                argv,
-                               L"d:s:j:p:v:e:haSV:",
+                               L"-d:s:j:p:v:e:haSV:",
                                long_options,
                                &opt_index);
         if (opt == -1)
@@ -2151,8 +2160,9 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
             }
 
             case 'a':
-                if (named_arguments.get() == NULL)
-                    named_arguments.reset(new wcstring_list_t);
+                has_named_arguments = true;
+                /* The function name is the first positional unless -a comes before all positionals */
+                name_is_first_positional = ! positionals.empty();
                 break;
 
             case 'S':
@@ -2179,6 +2189,11 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
             case 'h':
                 builtin_print_help(parser, streams, argv[0], streams.stdout_stream);
                 return STATUS_BUILTIN_OK;
+                
+            case 1:
+                assert(w.woptarg != NULL);
+                positionals.push_back(w.woptarg);
+                break;
 
             case '?':
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind-1]);
@@ -2191,90 +2206,93 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
 
     if (!res)
     {
-
-        if (argc == w.woptind)
+        /* Determine the function name, and remove it from the list of positionals */
+        wcstring function_name;
+        bool name_is_missing = positionals.empty();
+        if (! name_is_missing)
+        {
+            if (name_is_first_positional)
+            {
+                function_name = positionals.front();
+                positionals.erase(positionals.begin());
+            }
+            else
+            {
+                function_name = positionals.back();
+                positionals.erase(positionals.end() - 1);
+            }
+        }
+        
+        if (name_is_missing)
         {
             append_format(*out_err,
                           _(L"%ls: Expected function name\n"),
                           argv[0]);
             res=1;
         }
-        else if (wcsfuncname(argv[w.woptind]))
+        else if (wcsfuncname(function_name))
         {
             append_format(*out_err,
                           _(L"%ls: Illegal function name '%ls'\n"),
                           argv[0],
-                          argv[w.woptind]);
+                          function_name.c_str());
 
             res=1;
         }
-        else if (parser_keywords_is_reserved(argv[w.woptind]))
+        else if (parser_keywords_is_reserved(function_name))
         {
 
             append_format(*out_err,
                           _(L"%ls: The name '%ls' is reserved,\nand can not be used as a function name\n"),
                           argv[0],
-                          argv[w.woptind]);
+                          function_name.c_str());
 
             res=1;
         }
-        else if (! wcslen(argv[w.woptind]))
+        else if (function_name.empty())
         {
             append_format(*out_err, _(L"%ls: No function name given\n"), argv[0]);
             res=1;
         }
         else
         {
-
-            name = argv[w.woptind++];
-
-            if (named_arguments.get())
+            if (has_named_arguments)
             {
-                while (w.woptind < argc)
+                /* All remaining positionals are named arguments */
+                named_arguments.swap(positionals);
+                for (size_t i=0; i < named_arguments.size(); i++)
                 {
-                    if (wcsvarname(argv[w.woptind]))
+                    if (wcsvarname(named_arguments.at(i)))
                     {
                         append_format(*out_err,
                                       _(L"%ls: Invalid variable name '%ls'\n"),
                                       argv[0],
-                                      argv[w.woptind]);
+                                      named_arguments.at(i).c_str());
                         res = STATUS_BUILTIN_ERROR;
                         break;
                     }
-
-                    named_arguments->push_back(argv[w.woptind++]);
                 }
             }
-            else if (w.woptind != argc)
+            else if (! positionals.empty())
             {
+                // +1 because we already got the function name
                 append_format(*out_err,
                               _(L"%ls: Expected one argument, got %d\n"),
                               argv[0],
-                              argc);
+                              positionals.size() + 1);
                 res=1;
-
             }
         }
-    }
 
-    if (res)
-    {
-        output_stream_t *local_err = output_stream_t::new_buffered_stream();
-        builtin_print_help(parser, streams, argv[0], *local_err);
-        out_err->append(local_err->get_buffer());
-        delete local_err;
-    }
-    else
-    {
+        /* Here we actually define the function! */
         function_data_t d;
 
-        d.name = name;
+        d.name = function_name;
         if (desc)
             d.description = desc;
         d.events.swap(events);
         d.shadows = shadows;
-        if (named_arguments.get())
-            d.named_arguments.swap(*named_arguments);
+        d.named_arguments.swap(named_arguments);
         d.inherit_vars.swap(inherit_vars);
 
         for (size_t i=0; i<d.events.size(); i++)
@@ -2290,7 +2308,7 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
         // Handle wrap targets
         for (size_t w=0; w < wrap_targets.size(); w++)
         {
-            complete_add_wrapper(name, wrap_targets.at(w));
+            complete_add_wrapper(function_name, wrap_targets.at(w));
         }
     }
 
@@ -4061,7 +4079,9 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 static const builtin_data_t builtin_datas[]=
 {
     { 		L"[",  &builtin_test, N_(L"Test a condition")   },
+#if 0
     { 		L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
+#endif
     { 		L"and",  &builtin_generic, N_(L"Execute command if previous command suceeded")  },
     { 		L"begin",  &builtin_generic, N_(L"Create a block of code")   },
     { 		L"bg",  &builtin_bg, N_(L"Send job to background")   },
