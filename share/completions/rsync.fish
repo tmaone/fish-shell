@@ -1,3 +1,6 @@
+function __rsync_remote_target
+    commandline -ct | string match -r '.*::?(?:.*/)?'
+end
 
 complete -c rsync -s v -l verbose --description "Increase verbosity"
 complete -c rsync -s q -l quiet --description "Suppress non-error messages"
@@ -8,8 +11,8 @@ complete -c rsync -s r -l recursive --description "Recurse into directories"
 complete -c rsync -s R -l relative --description "Use relative path names"
 complete -c rsync -l no-implied-dirs --description "Don’t send implied dirs with --relative"
 complete -c rsync -s b -l backup --description "Make backups (see --suffix & --backup-dir)"
-complete -c rsync -l backup-dir=DIR --description "Make backups into hierarchy based in DIR"
-complete -c rsync -l suffix=SUFFIX --description "Backup suffix (default ~ w/o --backup-dir)"
+complete -c rsync -l backup-dir --description "Make backups into hierarchy based in DIR"
+complete -c rsync -l suffix --description "Backup suffix (default ~ w/o --backup-dir)"
 complete -c rsync -s u -l update --description "Skip files that are newer on the receiver"
 complete -c rsync -l inplace --description "Update destination files in-place"
 complete -c rsync -l append --description "Append data onto shorter files"
@@ -25,7 +28,7 @@ complete -c rsync -s p -l perms --description "Preserve permissions"
 complete -c rsync -s E -l executability --description "Preserve executability"
 complete -c rsync -s A -l acls --description "Preserve ACLs (implies -p) [non-standard]"
 complete -c rsync -s X -l xattrs --description "Preserve extended attrs (implies -p) [n.s.]"
-complete -c rsync -l chmod=CHMOD --description "Change destination permissions"
+complete -c rsync -l chmod --description "Change destination permissions"
 complete -c rsync -s o -l owner --description "Preserve owner (super-user only)"
 complete -c rsync -s g -l group --description "Preserve group"
 complete -c rsync -l devices --description "Preserve device files (super-user only)"
@@ -60,7 +63,7 @@ complete -c rsync -l partial-dir=DIR --description "Put a partially transferred 
 complete -c rsync -l delay-updates --description "Put all updated files into place at end"
 complete -c rsync -s m -l prune-empty-dirs --description "Prune empty directory chains from file-list"
 complete -c rsync -l numeric-ids --description "Don’t map uid/gid values by user/group name"
-complete -c rsync -l timeout=TIME --description "Set I/O timeout in seconds"
+complete -c rsync -l timeout --description "Set I/O timeout in seconds"
 complete -c rsync -s I -l ignore-times --description "Don’t skip files that match size and time"
 complete -c rsync -l size-only --description "Skip files that match in size"
 complete -c rsync -l modify-window=NUM --description "Compare mod-times with reduced accuracy"
@@ -72,17 +75,17 @@ complete -c rsync -l link-dest=DIR --description "Hardlink to files in DIR when 
 complete -c rsync -s z -l compress --description "Compress file data during the transfer"
 complete -c rsync -l compress-level --description "Explicitly set compression level"
 complete -c rsync -s C -l cvs-exclude --description "Auto-ignore files in the same way CVS does"
-complete -c rsync -s f -l filter=RULE --description "Add a file-filtering RULE"
+complete -c rsync -s f -l filter --description "Add a file-filtering RULE"
 complete -c rsync -s F --description "Same as --filter=’dir-merge /.rsync-filter’ repeated: --filter='- .rsync-filter'"
-complete -c rsync -l exclude=PATTERN --description "Exclude files matching PATTERN"
-complete -c rsync -l exclude-from=FILE --description "Read exclude patterns from FILE"
-complete -c rsync -l include=PATTERN --description "Don’t exclude files matching PATTERN"
+complete -c rsync -l exclude --description "Exclude files matching PATTERN"
+complete -c rsync -l exclude-from --description "Read exclude patterns from FILE"
+complete -c rsync -l include --description "Don’t exclude files matching PATTERN"
 complete -c rsync -l include-from=FILE --description "Read include patterns from FILE"
 complete -c rsync -l files-from=FILE --description "Read list of source-file names from FILE"
 complete -c rsync -s 0 -l from0 --description "All *from/filter files are delimited by 0s"
-complete -c rsync -l address=ADDRESS --description "Bind address for outgoing socket to daemon"
-complete -c rsync -l port=PORT --description "Specify double-colon alternate port number"
-complete -c rsync -l sockopts=OPTIONS --description "Specify custom TCP options"
+complete -c rsync -l address --description "Bind address for outgoing socket to daemon"
+complete -c rsync -l port --description "Specify double-colon alternate port number"
+complete -c rsync -l sockopts --description "Specify custom TCP options"
 complete -c rsync -l blocking-io --description "Use blocking I/O for the remote shell"
 complete -c rsync -l stats --description "Give some file-transfer stats"
 complete -c rsync -s 8 -l 8-bit-output --description "Leave high-bit chars unescaped in output"
@@ -108,27 +111,25 @@ complete -c rsync -l help --description "Display help and exit"
 # Hostname completion
 #
 complete -c rsync -d Hostname -a "
-
 (__fish_print_hostnames):
 
 (
-	#Prepend any username specified in the completion to the hostname
+	# Prepend any username specified in the completion to the hostname.
 	commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
 )(__fish_print_hostnames):
 
 (__fish_print_users)@\tUsername
-
 "
 
 #
 # Remote path
 #
-complete -c rsync -d "Remote path" -n "commandline -ct| __fish_sgrep -q :" -a "
+complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" -a "
 (
-	#Prepend any user@host:/path information supplied before the remote completion
-	commandline -ct| __fish_sgrep -Eo '.*:+(.*/)?'
+	# Prepend any user@host:/path information supplied before the remote completion.
+        __rsync_remote_target
 )(
-	#Get the list of remote files from the specified rsync server
-	rsync --list-only (commandline -ct| __fish_sgrep -Eo '.*:+(.*/)?') ^/dev/null | sed '/^d/ s,\$,/, ' | tr -s ' '| cut -d' ' -f 5-
+	# Get the list of remote files from the specified rsync server.
+        rsync --list-only (__rsync_remote_target) ^/dev/null | string replace -r '^d.*' '\$0/' | tr -s ' ' | cut -d' ' -f 5-
 )
 "

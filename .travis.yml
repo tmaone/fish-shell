@@ -1,5 +1,6 @@
 language: cpp
-sudo: false
+dist: trusty
+sudo: required
 
 matrix:
   include:
@@ -12,34 +13,43 @@ matrix:
             - expect
             - gettext
             - libncurses5-dev
-
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - bc
+            - expect
+            - gettext
+            - lib32ncurses5-dev
+            - g++-multilib
+      env:
+        - CXXFLAGS="-g -m32" CFLAGS="-g -m32"
     - os: linux
       compiler: clang
+      env:
+          - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address" ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
+      before_install: export CXX=clang++-3.8
       addons:
         apt:
           sources:
-            # stick with 3.6; the 3.7 Debian binaries do not support ASan yet
-            # https://llvm.org/bugs/show_bug.cgi?id=22757
-            - llvm-toolchain-precise-3.6
+            - llvm-toolchain-precise-3.8
             - ubuntu-toolchain-r-test
           packages:
-            - clang-3.6
-            - llvm-3.6 # for llvm-symbolizer
+            - clang-3.8
+            - llvm-3.8 # for llvm-symbolizer
             - bc
             - expect
             - gettext
             - libncurses5-dev
-      env:
-        - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address"
-        - ASAN_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer-3.6"
-        - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=0
-      before_install: export CXX=clang++-3.6
-
     - os: osx
+      osx_image: xcode8
       before_install:
         - brew update
         - brew install pcre2 # use system PCRE2
-
+        - brew outdated xctool || brew upgrade xctool # for xcode... soon.
+      env:
+        - CXXFLAGS="-g -lstdc++"
   fast_finish: true
 
 script:
@@ -62,5 +72,5 @@ notifications:
     skip_join: true
   webhooks:
     urls:
-        #- https://webhooks.gitter.im/e/61821cec3015bf0f8bb1
-        secure: fPfOmxnC3MCsfR1oocVFeWLawGcRZkn+8fNHlSOeZ+SqqoZfcCHgQTvQ22TqmVl1yvkXbNlaXjo6dbVzTOAh7r7H0bRMEKBVh3dQS7wqjB1sKivpXd8PAS3BTj5MQpGeJzdHnDuwVlwDktGtfHfhGeq1Go/4IosOq8u+6RTe28g=
+      #- https://webhooks.gitter.im/e/61821cec3015bf0f8bb1
+      secure: fPfOmxnC3MCsfR1oocVFeWLawGcRZkn+8fNHlSOeZ+SqqoZfcCHgQTvQ22TqmVl1yvkXbNlaXjo6dbVzTOAh7r7H0bRMEKBVh3dQS7wqjB1sKivpXd8PAS3BTj5MQpGeJzdHnDuwVlwDktGtfHfhGeq1Go/4IosOq8u+6RTe28g=

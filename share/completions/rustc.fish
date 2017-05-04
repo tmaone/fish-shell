@@ -2,7 +2,7 @@
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 complete -e -c rustc
 
-complete -c rustc -s h -l help 
+complete -c rustc -s h -l help
 
 complete -c rustc -x -l cfg
 complete -c rustc -r -s L -a 'dylib= static= framework='
@@ -49,13 +49,13 @@ for line in $rust_docs
 end
 
 set -l rust_docs (rustc -W help  \
-    | egrep \
-        '(\s+)(.+)(\s+)(allow|warn|deny|forbid)(\s+){2}([^\n]+)' \
+    | string match -r \
+        '(?:\s+)(?:.+)(?:\s+)(?:allow|warn|deny|forbid)(?:\s+){2}(?:[^\n]+)' \
     | string replace -r -i \
         '(\s+)(.+)(\s+)(allow|warn|deny|forbid)(\s+){2}([^\n]+)' '$2 $6' \
     | string match -r '^.*[^:]$' \
-    | egrep -v '^(allow|warn|deny|forbid)$' \
-    | egrep -v '^([a-z\-]+)(\s+)(allow|warn|deny|forbid)')
+    | string match -r -v '^(allow|warn|deny|forbid)$' \
+    | string match -r -v '^([a-z\-]+)(\s+)(allow|warn|deny|forbid)')
 
 for line in $rust_docs
     set docs (string split -m 1 ' ' $line)

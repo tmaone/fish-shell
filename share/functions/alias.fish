@@ -1,5 +1,5 @@
-function alias --description 'Legacy function for creating shellscript functions using an alias-like syntax'
-    if count $argv > /dev/null
+function alias --description 'Creates a function wrapping a command'
+    if count $argv >/dev/null
         switch $argv[1]
             case -h --h --he --hel --help
                 __fish_print_help alias
@@ -11,13 +11,18 @@ function alias --description 'Legacy function for creating shellscript functions
     set -l body
     set -l prefix
     set -l first_word
+    set -l wrapped_cmd
     switch (count $argv)
 
         case 0
-            echo "Fish implements aliases using functions. Use 'functions' builtin to see list of functions and 'functions function_name' to see function definition, type 'help alias' for more information."
-            return 1
+            for func in (functions -n)
+                set -l output (functions $func | string match -r -- "function .* --description '(alias .*)'" | string split \n)
+                set -q output[2]
+                and echo $output[2]
+            end
+            return 0
         case 1
-            set -l tmp (string replace -r "=" '\n' -- $argv) ""
+            set -l tmp (string split -m 1 "=" -- $argv) ""
             set name $tmp[1]
             set body $tmp[2]
 
@@ -39,11 +44,13 @@ function alias --description 'Legacy function for creating shellscript functions
         return 1
     end
 
-    # Extract the first command from the body
-	# This is supposed to replace all non-escaped (i.e. preceded by an odd number of `\`) spaces with a newline
-	# so it splits on them
-	set -l tmp (string replace -ra "([^\\\ ])((\\\\\\\)*) " '$1\n' $body)
+    # Extract the first command from the body. This is supposed to replace all non-escaped (i.e.
+    # preceded by an odd number of `\`) spaces with a newline so it splits on them. See issue #2220
+    # for why the following borderline incomprehensible code exists.
+    set -l tmp (string replace -ra "([^\\\ ])((\\\\\\\)*) " '$1\n' $body)
     set first_word (string trim $tmp[1])
+    # If the user does something like `alias x 'foo; bar'` we need to strip the semicolon.
+    set wrapped_cmd (string trim -c ';' $first_word)
     if set -q tmp[2]
         set body $tmp[2..-1]
     else
@@ -52,14 +59,15 @@ function alias --description 'Legacy function for creating shellscript functions
 
     # Prevent the alias from immediately running into an infinite recursion if
     # $body starts with the same command as $name.
-
-    if test $first_word = $name
+    if test $wrapped_cmd = $name
         if contains $name (builtin --names)
             set prefix builtin
         else
             set prefix command
         end
     end
-    eval "function $name --wraps $first_word; $prefix $first_word $body \$argv; end"
+    set -l cmd_string (string escape "alias $argv")
+    set wrapped_cmd (string escape $wrapped_cmd)
+    echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end" | source
+    #echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end"
 end
-

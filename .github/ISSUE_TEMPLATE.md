@@ -1,40 +1,14 @@
 <!--
-Thanks for helping to make fish better!
+Please tell us which fish version you are using by executing the following:
 
-If you are asking for help with fish, or you've found a bug:
- - Make sure it's not a known or solved issue, by searching https://github.com/fish-shell/fish-shell/issues
- - Fill in the following information carefully:
+  fish --version
+  echo $version
 
+Please tell us which operating system and terminal you are using. The output of `uname -a` and `echo $TERM` may be helpful in this regard although other commands might be relevant in your specific situation.
+
+Please tell us if you tried fish without third-party customizations by executing this command and whether it affected the behavior you are reporting:
+
+  sh -c 'env HOME=$(mktemp -d) fish'
+
+Tell us how to reproduce the problem. Including an asciinema.org recording is useful for problems that involve the visual display of fish output such as its prompt.
 -->
-
-[Please include a short description of the problem here]
-
-### Reproduction Steps:
-
-1. [First Step]
-2. [Second Step]
-3. [Other Steps...]
-
-### Expected behavior:
-
-[Describe expected behavior here]
-
-### Observed behavior:
-
-[Describe observed behavior here]
-
-### Additional information:
-
-[ Other useful information, such as:
-  When did this problem start?
-  Does this happen all the time?
-  Has anything changed on your system recently?
-]
-  
-
----
-Fish version: [from the output of fish --version]
-
-Operating system: [your operating system and how you installed fish e.g. Homebrew, Ubuntu PPA, distribution package]
-
-Terminal or terminal emulator: [e.g. PuTTy, iTerm2, GNOME Terminal, VT220]

@@ -104,6 +104,9 @@ echo Test 5 $sta
 echo Test redirections
 begin ; echo output ; echo errput 1>&2  ; end 2>&1 | tee ../test/temp/tee_test.txt ; cat ../test/temp/tee_test.txt
 
+# Test that trailing ^ doesn't trigger redirection, see #1873
+echo caret_no_redirect 12345^
+
 # Verify that we can pipe something other than stdout
 # The first line should be printed, since we output to stdout but pipe stderr to /dev/null
 # The second line should not be printed, since we output to stderr and pipe it to /dev/null
@@ -123,7 +126,7 @@ echo -e 'abc\cdef' # won't output a newline!
 echo ''
 echo -
 
-echo -ne '\376' | xxd -p
+echo -ne '\376' | display_bytes
 
 echo -e Catch your breath
 
@@ -166,5 +169,11 @@ function always_fails
     end
 end
 
-always_fails ; echo $status
+# Verify $argv set correctly in sourced scripts.
+# Issue #139
+echo 'echo "source argv {$argv}"' | source
+echo 'echo "source argv {$argv}"' | source -
+echo 'echo "source argv {$argv}"' | source - abc
+echo 'echo "source argv {$argv}"' | source - abc def
 
+always_fails ; echo $status

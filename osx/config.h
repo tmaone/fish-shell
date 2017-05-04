@@ -1,14 +1,8 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to 1 if you have the `backtrace' function. */
-#define HAVE_BACKTRACE 1
-
-/* Define to 1 if you have the `backtrace_symbols_fd' function. */
-#define HAVE_BACKTRACE_SYMBOLS_FD 1
-
-/* Define to 1 one if the implemented fwprintf is broken */
-/* #undef HAVE_BROKEN_FWPRINTF */
+/* Define to 1 if you have the `backtrace_symbols' function. */
+#define HAVE_BACKTRACE_SYMBOLS 1
 
 /* Define to 1 if you have the `clock_gettime' function. */
 /* #undef HAVE_CLOCK_GETTIME */
@@ -16,21 +10,21 @@
 /* Define to 1 if you have the <curses.h> header file. */
 #define HAVE_CURSES_H 1
 
-/* Define to 1 if you have the `dcgettext' function. */
-/* #undef HAVE_DCGETTEXT */
+/* define if the compiler supports basic C++11 syntax */
+#define HAVE_CXX11 1
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #define HAVE_DIRENT_H 1
 
+/* Define to 1 if you have the `dirfd' function. */
+#define HAVE_DIRFD 1
+
 /* Define to 1 if you have the <execinfo.h> header file. */
 #define HAVE_EXECINFO_H 1
 
-/* Define to 1 if you have the `fgetwc' function. */
-#define HAVE_FGETWC 1
-
-/* Define to 1 if you have the `fputwc' function. */
-#define HAVE_FPUTWC 1
+/* Define to 1 if you have the `flock' function. */
+#define HAVE_FLOCK 1
 
 /* Define to 1 if you have the `futimens' function. */
 /* #undef HAVE_FUTIMENS */
@@ -38,14 +32,14 @@
 /* Define to 1 if you have the `futimes' function. */
 #define HAVE_FUTIMES 1
 
-/* Define to 1 if you have the `fwprintf' function. */
-#define HAVE_FWPRINTF 1
-
 /* Define to 1 if you have the `getifaddrs' function. */
 #define HAVE_GETIFADDRS 1
 
 /* Define to 1 if you have the <getopt.h> header file. */
 #define HAVE_GETOPT_H 1
+
+/* Define to 1 if you have the `getpwent' function. */
+#define HAVE_GETPWENT 1
 
 /* Define to 1 if you have the `gettext' function. */
 /* #undef HAVE_GETTEXT */
@@ -68,9 +62,6 @@
 /* Define to 1 if you have the `mkostemp' function. */
 /* #undef HAVE_MKOSTEMP */
 
-/* Define to 1 if you have the nan function */
-#define HAVE_NAN 1
-
 /* Define to 1 if you have the <ncurses/curses.h> header file. */
 /* #undef HAVE_NCURSES_CURSES_H */
 
@@ -83,8 +74,8 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_NDIR_H */
 
-/* Define to 1 if realpath accepts null for its second argument. */
-#define HAVE_REALPATH_NULL 1
+/* Define to 1 if the shm_open() function exists */
+#define HAVE_SHM_OPEN 1
 
 /* Define to 1 if you have the <siginfo.h> header file. */
 /* #undef HAVE_SIGINFO_H */
@@ -98,6 +89,15 @@
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
 
+/* Define to 1 if you have the `std::wcscasecmp' function. */
+/* #undef HAVE_STD__WCSCASECMP */
+
+/* Define to 1 if you have the `std::wcsdup' function. */
+/* #undef HAVE_STD__WCSDUP */
+
+/* Define to 1 if you have the `std::wcsncasecmp' function. */
+/* #undef HAVE_STD__WCSNCASECMP */
+
 /* Define to 1 if you have the <strings.h> header file. */
 #define HAVE_STRINGS_H 1
 
@@ -110,14 +110,14 @@
 /* Define to 1 if `d_type' is a member of `struct dirent'. */
 #define HAVE_STRUCT_DIRENT_D_TYPE 1
 
+/* Define to 1 if `st_ctime_nsec' is a member of `struct stat'. */
+/* #undef HAVE_STRUCT_STAT_ST_CTIME_NSEC */
+
 /* Define to 1 if `st_mtimespec.tv_nsec' is a member of `struct stat'. */
 #define HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC 1
 
 /* Define to 1 if `st_mtim.tv_nsec' is a member of `struct stat'. */
 /* #undef HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC */
-
-/* Define to 1 if you have the `sysconf' function. */
-#define HAVE_SYSCONF 1
 
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
@@ -154,10 +154,6 @@
 /* Define to 1 if you have the <term.h> header file. */
 #define HAVE_TERM_H 1
 
-/* Define to 1 if the wgettext function should be used for translating
-   strings. */
-#define HAVE_TRANSLATE_H 1
-
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
@@ -167,14 +163,8 @@
 /* Define to 1 if you have the `wcsdup' function. */
 #define HAVE_WCSDUP 1
 
-/* Define to 1 if you have the `wcslcat' function. */
-#define HAVE_WCSLCAT 1
-
 /* Define to 1 if you have the `wcslcpy' function. */
 #define HAVE_WCSLCPY 1
-
-/* Define to 1 if you have the `wcslen' function. */
-#define HAVE_WCSLEN 1
 
 /* Define to 1 if you have the `wcsncasecmp' function. */
 #define HAVE_WCSNCASECMP 1
@@ -182,23 +172,8 @@
 /* Define to 1 if you have the `wcsndup' function. */
 /* #undef HAVE_WCSNDUP */
 
-/* Define to 1 if you have the `wcstok' function. */
-#define HAVE_WCSTOK 1
-
-/* Define to 1 if you have the `wcstol' function. */
-#define HAVE_WCSTOL 1
-
-/* Define to 1 if you have the `wcswidth' function. */
-#define HAVE_WCSWIDTH 1
-
-/* Define to 1 if you have the `wcwidth' function. */
-#define HAVE_WCWIDTH 1
-
 /* Define to 1 if the winsize struct and TIOCGWINSZ macro exist */
 #define HAVE_WINSIZE 1
-
-/* Define to 1 if getopt_long exists and works. */
-#define HAVE_WORKING_GETOPT_LONG 1
 
 /* Define to 1 if the _nl_msg_cat_cntr symbol is exported. */
 /* #undef HAVE__NL_MSG_CAT_CNTR */
@@ -208,9 +183,6 @@
 
 /* Define to 1 if the _sys_errs array is available. */
 /* #undef HAVE__SYS__ERRS */
-
-/* Define to 1 if the __environ symbol is exported. */
-/* #undef HAVE___ENVIRON */
 
 /* Define to 1 to disable ncurses macros that conflict with the STL */
 #define NCURSES_NOMACROS 1
@@ -225,7 +197,7 @@
 #define PACKAGE_NAME "fish"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "fish 2.2.0-git"
+#define PACKAGE_STRING "fish 2.5.0-git"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "fish"
@@ -234,7 +206,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.2.0-git"
+#define PACKAGE_VERSION "2.5.0-git"
 
 /* The size of `wchar_t', as computed by sizeof. */
 #define SIZEOF_WCHAR_T 4
@@ -245,23 +217,54 @@
 /* Define to 1 if tparm accepts a fixed amount of paramters. */
 /* #undef TPARM_SOLARIS_KLUDGE */
 
-/* Evil kludge to get Power based machines to work */
-/* #undef TPUTS_KLUDGE */
-
 /* Perform string translations with gettext */
 /* #undef USE_GETTEXT */
+
+/* Enable extensions on AIX 3, Interix.  */
+#ifndef _ALL_SOURCE
+# define _ALL_SOURCE 1
+#endif
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE 1
+#endif
+/* Enable threading extensions on Solaris.  */
+#ifndef _POSIX_PTHREAD_SEMANTICS
+# define _POSIX_PTHREAD_SEMANTICS 1
+#endif
+/* Enable extensions on HP NonStop.  */
+#ifndef _TANDEM_SOURCE
+# define _TANDEM_SOURCE 1
+#endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# define __EXTENSIONS__ 1
+#endif
+
 
 /* The size of wchar_t in bits. */
 #define WCHAR_T_BITS 32
 
-/* Macro to enable additional prototypes under BSD */
-/* #undef _NETBSD_SOURCE */
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#ifndef _DARWIN_USE_64_BIT_INODE
+# define _DARWIN_USE_64_BIT_INODE 1
+#endif
 
-/* Macro to enable additional prototypes under BSD */
-/* #undef __BSD_VISIBLE */
+/* Number of bits in a file offset, on hosts where this is settable. */
+/* #undef _FILE_OFFSET_BITS */
 
-/* Macro to enable additional prototypes under Solaris */
-/* #undef __EXTENSIONS__ */
+/* Define for large files, on AIX-style hosts. */
+/* #undef _LARGE_FILES */
+
+/* Define to 1 if on MINIX. */
+/* #undef _MINIX */
+
+/* Define to 2 if the system does not provide POSIX.1 features except with
+   this defined. */
+/* #undef _POSIX_1_SOURCE */
+
+/* Define to 1 if you need to in order for `stat' and other things to work. */
+/* #undef _POSIX_SOURCE */
 
 #if __GNUC__ >= 3
 #ifndef __warn_unused

@@ -4,8 +4,21 @@
 # should be running it via `make test` to ensure the environment is properly
 # setup.
 
+# This is a list of flakey tests that often succeed when rerun.
+set TESTS_TO_RETRY bind.expect
+
+# Set this var to modify behavior of the code being tests. Such as avoiding running
+# `fish_update_completions` when running tests.
+set -x FISH_UNIT_TESTS_RUNNING 1
+
 # Change to directory containing this script
 cd (dirname (status -f))
+
+# These env vars should not be inherited from the user environment because they can affect the
+# behavior of the tests. So either remove them or set them to a known value.
+# See also tests/test.fish.
+set TERM xterm
+set -e ITERM_PROFILE
 
 # Test files specified on commandline, or all *.expect files
 if set -q argv[1]
@@ -20,7 +33,7 @@ cat interactive.config >> $XDG_CONFIG_HOME/fish/config.fish
 say -o cyan "Testing interactive functionality"
 if not type -q expect
     say red "Tests disabled: `expect` not found"
-    exit 0
+    exit 1
 end
 
 function test_file
@@ -30,7 +43,7 @@ function test_file
         set -lx TERM dumb
         expect -n -c 'source interactive.expect.rc' -f $file >$file.tmp.out ^$file.tmp.err
     end
-    set -l tmp_status $status
+    set -l exit_status $status
     set -l res ok
     mv -f interactive.tmp.log $file.tmp.log
 
@@ -38,9 +51,8 @@ function test_file
     set -l out_status $status
     diff $file.tmp.err $file.err >/dev/null
     set -l err_status $status
-    set -l exp_status (cat $file.status)[1]
 
-    if test $out_status -eq 0 -a $err_status -eq 0 -a $exp_status -eq $tmp_status
+    if test $out_status -eq 0 -a $err_status -eq 0 -a $exit_status -eq 0
         say green "ok"
         # clean up tmp files
         rm -f $file.tmp.{err,out,log}
@@ -55,9 +67,9 @@ function test_file
             say yellow "Error output differs for file $file. Diff follows:"
             colordiff -u $file.tmp.err $file.err
         end
-        if test $exp_status -ne $tmp_status
+        if test $exit_status -ne 0
             say yellow "Exit status differs for file $file."
-            echo "Expected $exp_status, got $tmp_status."
+            echo "Unexpected test exit status $exit_status."
         end
         if set -q SHOW_INTERACTIVE_LOG
             # dump the interactive log
@@ -69,10 +81,19 @@ function test_file
     end
 end
 
-set -l failed
+set failed
 for i in $files_to_test
     if not test_file $i
-        set failed $failed $i
+        # Retry flakey tests once.
+        if contains $i $TESTS_TO_RETRY
+            say -o cyan "Rerunning test $i since it is known to be flakey"
+            rm -f $i.tmp.*
+            if not test_file $i
+                set failed $failed $i
+            end
+        else
+            set failed $failed $i
+        end
     end
 end
 

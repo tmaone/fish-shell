@@ -21,6 +21,7 @@ fi
 
 # Determine which man pages we don't want to generate.
 # on OS X, don't make a man page for open, since we defeat fish's open function on OS X.
+# This is also done in the Makefile, but the Xcode build doesn't use that
 CONDEMNED_PAGES=
 if test `uname` = 'Darwin'; then
 	CONDEMNED_PAGES="$CONDEMNED_PAGES open.1"
@@ -45,6 +46,9 @@ echo "   input directory: $INPUTDIR"
 echo "      input filter: $INPUTFILTER"
 echo "  output directory: $OUTPUTDIR"
 echo "          skipping: $CONDEMNED_PAGES"
+
+#Until now the makefile likely has been affecting our output, reset for upcoming warnings
+tput sgr0
 
 # Make sure INPUTDIR is found
 if test ! -d "$INPUTDIR"; then
@@ -132,13 +136,18 @@ if test "$RESULT" = 0 ; then
 fi
 
 # Destroy TMPLOC
-echo "Cleaning up '$TMPLOC'"
+if test "$RESULT" -ne 0; then
+	echo "Cleaning up '$TMPLOC'"
+fi
 rm -Rf "$TMPLOC"
 
-if test "$RESULT" = 0; then
-    # Tell the user what we did
-    echo "Output man pages into '${OUTPUTDIR}'"
+if test "$RESULT" -ne 0; then
+	tput smso 2> /dev/null || true
+	echo "Doxygen failed creating manpages. See the output log for details."
+	tput sgr0 2> /dev/null || true
 else
-    echo "Doxygen failed. See the output log for details."
+	tput bold 2> /dev/null || true
+	echo Built manpages
+	tput sgr0 2> /dev/null || true
 fi
 exit $RESULT

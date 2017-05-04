@@ -7,6 +7,7 @@ bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE]
 bind [(-M | --mode) MODE] [(-k | --key)] SEQUENCE
 bind (-K | --key-names) [(-a | --all)]
 bind (-f | --function-names)
+bind (-L | --list-modes)
 bind (-e | --erase) [(-M | --mode) MODE]
      (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])
 \endfish
@@ -43,6 +44,8 @@ The following parameters are available:
 
 - `-f` or `--function-names` Display a list of available input functions
 
+- `-L` or `--list-modes` Display a list of defined bind modes
+
 - `-M MODE` or `--mode MODE` Specify a bind mode that the bind is used in. Defaults to "default"
 
 - `-m NEW_MODE` or `--sets-mode NEW_MODE` Change the current mode to `NEW_MODE` after this binding is executed
@@ -71,29 +74,31 @@ The following special input functions are available:
 
 - `backward-word`, move one word to the left
 
+- `beginning-of-buffer`, moves to the beginning of the buffer, i.e. the start of the first line
+
 - `beginning-of-history`, move to the beginning of the history
 
 - `beginning-of-line`, move to the beginning of the line
+
+- `begin-selection`, start selecting text
 
 - `capitalize-word`, make the current word begin with a capital letter
 
 - `complete`, guess the remainder of the current token
 
-- `complete-and-search`, invoke the searchable pager on completion options
+- `complete-and-search`, invoke the searchable pager on completion options (for convenience, this also moves backwards in the completion pager)
 
 - `delete-char`, delete one character to the right of the cursor
 
-- `delete-line`, delete the entire line
-
 - `downcase-word`, make the current word lowercase
 
-- `dump-functions`, print a list of all key-bindings
+- `end-of-buffer`, moves to the end of the buffer, i.e. the end of the first line
 
 - `end-of-history`, move to the end of the history
 
 - `end-of-line`, move to the end of the line
 
-- `explain`, print a description of possible problems with the current command
+- `end-selection`, end selecting text
 
 - `forward-bigword`, move one whitespace-delimited word to the right
 
@@ -109,11 +114,15 @@ The following special input functions are available:
 
 - `kill-line`, move everything from the cursor to the end of the line to the killring
 
+- `kill-selection`, move the selected text to the killring
+
 - `kill-whole-line`, move the line to the killring
 
 - `kill-word`, move the next word to the killring
 
 - `suppress-autosuggestion`, remove the current autosuggestion
+
+- `swap-selection-start-stop`, go to the other end of the highlighted text without changing the selection
 
 - `transpose-chars`,  transpose two characters to the left of the cursor
 
@@ -129,7 +138,7 @@ The following special input functions are available:
 \subsection bind-example Examples
 
 \fish
-bind \cd 'exit'
+bind <asis>\\cd</asis> 'exit'
 \endfish
 Causes `fish` to exit when @key{Control,D} is pressed.
 
@@ -140,7 +149,7 @@ Performs a history search when the @key{Page Up} key is pressed.
 
 \fish
 set -g fish_key_bindings fish_vi_key_bindings
-bind -M insert \cc kill-whole-line force-repaint
+bind -M insert \\cc kill-whole-line force-repaint
 \endfish
 Turns on Vi key bindings and rebinds @key{Control,C} to clear the input line.
 

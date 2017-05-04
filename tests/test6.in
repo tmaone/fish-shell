@@ -1,5 +1,11 @@
 # vim: set filetype=fish:
 
+# Regression test for issue #3129. In previous versions these statements would
+# cause an `assert()` to fire thus killing the shell.
+complete -c pkill -o ''
+complete -c pkill -l ''
+complete -c pkill -s ''
+
 # Test that conditions that add or remove completions don't deadlock, etc.
 # We actually encountered some case that was effectively like this (Issue 2 in github)
 
@@ -45,6 +51,27 @@ complete -c CCCC -e
 echo "CCCC:"
 complete -C'CCCC -' | sort
 
+echo "Test that -- suppresses option completions"
+complete -c TestDoubleDash -l TestDoubleDashOption
+complete -C'TestDoubleDash -' | sort
+echo "Expect no output:" (complete -C'TestDoubleDash -- -' | sort)
+
+# fish seems to have always handled "exclusive" options strangely
+# It seems to treat them the same as "old-style" (single-dash) long options
+echo "Testing exclusive options"
+complete -c TestExclusive -x -s Q
+complete -c TestExclusive -x -s W
+complete -c TestExclusive -s A
+echo "Expect -A -Q -W:" (complete -C'TestExclusive -' | sort | string join ' ')
+echo "Expect -AQ -AW:" (complete -C'TestExclusive -A' | sort | string join ' ')
+echo "Expect no output 1:" (complete -C'TestExclusive -Q')
+echo "Expect no output 2:" (complete -C'TestExclusive -W')
+
+# Test for optional arguments, like cp's --backup
+complete -c TestOptionalArgument -l backup -f -a 'none all simple'
+echo "Expect --backup --backup=:" (complete -C'TestOptionalArgument -' | sort | string join ' ')
+echo "Expect --backup=all  --backup=none  --backup=simple:" (complete -C'TestOptionalArgument --backup=' | sort | string join ' ')
+
 # Test that directory completions work correctly
 if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end
     pushd test6.tmp.dir
@@ -71,4 +98,38 @@ if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end
     rm -rf test6.tmp.dir
 else
     echo "error: could not create temp environment" >&2
+end
+
+# Test command expansion with parened PATHs (#952)
+begin
+  set -l parened_path $PWD/'test6.tmp2.(paren).dir'
+  set -l parened_subpath $parened_path/subdir
+  if not begin
+        rm -rf $parened_path
+	    and mkdir $parened_path
+		and mkdir $parened_subpath
+	    and ln -s /bin/ls $parened_path/'__test6_(paren)_command'
+	    and ln -s /bin/ls $parened_subpath/'__test6_subdir_(paren)_command'
+      end
+    echo "error: could not create command expansion temp environment" >&2
+  end
+  
+  # Verify that we can expand commands when PATH has parens
+  set -l PATH $parened_path $PATH
+  set -l completed (complete -C__test6_ | cut -f 1 -d \t)
+  if test "$completed" = '__test6_(paren)_command'
+    echo "Command completion with parened PATHs test passed"
+  else
+    echo "Command completion with parened PATHs test failed. Expected __test6_(paren)_command, got $completed" >&2
+  end
+  
+  # Verify that commands with intermediate slashes do NOT expand with respect to PATH
+  set -l completed (complete -Csubdir/__test6_subdir)
+  if test -z "$completed"
+    echo "Command completion with intermediate slashes passed"
+  else
+    echo "Command completion with intermediate slashes: should output nothing, instead got $completed" >&2
+  end
+  
+  rm -rf $parened_path
 end

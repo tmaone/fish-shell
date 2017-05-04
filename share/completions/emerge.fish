@@ -4,7 +4,7 @@
 
 function __fish_emerge_print_installed_pkgs --description 'Prints completions for installed packages on the system from /var/db/pkg'
  if test -d /var/db/pkg
-   find /var/db/pkg/ -type d | cut -d'/' -f5-6 | sort | uniq | \
+   find /var/db/pkg/ -type d | cut -d'/' -f5-6 | sort -u | \
        sed 's/-[0-9]\{1,\}\..*$//' | sed -e '/^ *$/d'
    return
  end
@@ -13,7 +13,7 @@ end
 function __fish_emerge_print_all_pkgs --description 'Prints completions for all available packages on the system from /usr/portage'
  if test -d /usr/portage
    find /usr/portage/ -maxdepth 2 -type d | cut -d'/' -f4-5 | \
-       sed 's/^\(distfiles\|profiles\|eclass\).*$//' | sort | uniq | \
+       sed 's/^\(distfiles\|profiles\|eclass\).*$//' | sort -u | \
        sed 's/-[0-9]\{1,\}\..*$//' | sed -e '/^ *$/d'
    return
  end
@@ -30,8 +30,7 @@ end
 
 
 function __fish_emerge_print_all_pkgs_with_version_compare --description 'Print completions for all packages including the version compare if that is already typed'
-    set -l version_comparator (commandline --current-token | \
-                               __fish_sgrep -o '^[\'"]*[<>]\?=\?' | \
+    set -l version_comparator (commandline -t | string match -r '^[\'"]*[<>]\?=\?' | \
                                sed -r 's/^[\'"]*(.*)/\1/g')
     set -l sedstring
 
